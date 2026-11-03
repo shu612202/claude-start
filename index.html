@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>Claude で開く</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2em auto; padding: 0 1em; line-height: 1.6; }
+  a.btn { display: inline-block; padding: .6em 1.2em; background: #c96442; color: #fff; border-radius: 6px; text-decoration: none; font-size: 1.1em; }
+  pre { white-space: pre-wrap; word-break: break-all; background: #f4f4f4; padding: .8em; border-radius: 6px; }
+  .err { color: #b00020; }
+</style>
+</head>
+<body>
+<!-- claude-start index.html v1.0 2026-11-03
+     URL の # の後ろ(folder と q)を読み、claude://code/new へ移るだけのページ。
+     # の後ろはブラウザの外(このサーバー)へ送られない。移る先は claude://code/new だけ。外へは何も送らない。 -->
+<h1>Claude で開く</h1>
+<p id="msg">準備中…</p>
+<p><a id="go" class="btn" href="#" hidden>Claude で開く</a></p>
+<div id="detail" hidden>
+  <p>開くフォルダ:</p><pre id="folder"></pre>
+  <p>入力欄に入る文(送るのはあなたです):</p><pre id="q"></pre>
+</div>
+<script>
+(function () {
+  'use strict';
+  var MAX_Q = 14000;
+  function show(id, text) { document.getElementById(id).textContent = text; }
+  function fail(text) {
+    var m = document.getElementById('msg');
+    m.textContent = text;
+    m.className = 'err';
+  }
+  var params;
+  try {
+    var href = String(location.href);
+    var at = href.indexOf('#');
+    params = new URLSearchParams(at === -1 ? '' : href.slice(at + 1));
+  } catch (e) {
+    fail('リンクの形が読めませんでした。');
+    return;
+  }
+  var folder = params.get('folder') || '';
+  var q = params.get('q') || '';
+  if (!folder || !q) { fail('リンクに folder と q がありません。'); return; }
+  if (!/^[A-Za-z]:[\\\/]/.test(folder) || folder.indexOf('..') !== -1 || /[\u0000-\u001f]/.test(folder)) {
+    fail('フォルダは C:\\ のような絶対パスで、.. を含められません。');
+    return;
+  }
+  if (q.length > MAX_Q) { fail('頼みの文が長すぎます(' + q.length + ' 字。上限 ' + MAX_Q + ' 字)。'); return; }
+  var target = 'claude://code/new?folder=' + encodeURIComponent(folder) + '&q=' + encodeURIComponent(q);
+  show('folder', folder);
+  show('q', q);
+  document.getElementById('detail').hidden = false;
+  var go = document.getElementById('go');
+  go.href = target;
+  go.hidden = false;
+  show('msg', 'Claude のアプリを開きます。開かないときは下のボタンを押してください。');
+  window.location.href = target;
+})();
+</script>
+</body>
+</html>
