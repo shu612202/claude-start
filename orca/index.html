@@ -14,9 +14,9 @@
 </style>
 </head>
 <body>
-<!-- orca/index.html v0.1 2026-11-17
-     URL の # の後ろ(row・step・f)を読み、aidev-orca://kaigi/ へ移るだけのページ。claude-start と同じ作り。
-     # の後ろはブラウザの外(このサーバー)へ送られない。移る先は aidev-orca://kaigi/ だけ。頼みの文は持たない(パソコンの起動口が組む)。 -->
+<!-- orca/index.html v0.2 2026-11-17(v0.1 同日)
+     URL の # の後ろ(k・row・step・f)を読み、aidev-orca://<k>/ へ移るだけのページ。claude-start と同じ作り。k が無ければ kaigi。
+     # の後ろはブラウザの外(このサーバー)へ送られない。移る先は aidev-orca:// の決まった 5 種類だけ。頼みの文は持たない(パソコンの起動口が組み、手順の名前も起動口が確かめる)。 -->
 <h1>Orca で開く</h1>
 <p id="msg">準備中…</p>
 <p><a id="go" class="btn" href="#" hidden>Orca で開く</a></p>
@@ -27,13 +27,15 @@
   var p;
   try { var h = String(location.href); var at = h.indexOf('#'); p = new URLSearchParams(at === -1 ? '' : h.slice(at + 1)); }
   catch (e) { fail('リンクの形が読めませんでした。'); return; }
+  var k = p.get('k') || 'kaigi';
   var row = (p.get('row') || '').toLowerCase();
   var step = p.get('step') || '';
   var f = p.get('f') || '';
-  if (!/^[0-9a-f]{32}$/.test(row)) { fail('行の ID の形が違います。'); return; }
-  if (['mae', 'naka', 'ato', 'atono'].indexOf(step) === -1) { fail('手順の名前が違います。'); return; }
+  if (['kaigi', 'sagyou', 'ijou', 'kaisha', 'tenken'].indexOf(k) === -1) { fail('頼みの種類が違います。'); return; }
+  if (k === 'tenken' ? row !== '' : !/^[0-9a-f]{32}$/.test(row)) { fail('行の ID の形が違います。'); return; }
+  if (!/^[a-z]{0,12}$/.test(step)) { fail('手順の名前が違います。'); return; }
   if (f && (!/^[A-Za-z0-9_\\]+$/.test(f) || f.indexOf('..') !== -1)) { fail('開くフォルダの形が違います。'); return; }
-  var target = 'aidev-orca://kaigi/?row=' + row + '&step=' + step + '&f=' + encodeURIComponent(f);
+  var target = 'aidev-orca://' + k + '/?row=' + row + '&step=' + step + '&f=' + encodeURIComponent(f);
   var go = document.getElementById('go');
   go.href = target; go.hidden = false;
   document.getElementById('msg').textContent = 'Orca で Claude Code を開きます。開かないときは下のボタンを押してください。';
